@@ -48,7 +48,12 @@ export function resolveJevConfig(env: Record<string, string | undefined>): {
   const backend: 'gateway' | 'typesafe' = env.JEV_BACKEND === 'typesafe' ? 'typesafe' : 'gateway';
   const modelOverride = env.JEV_MODEL && env.JEV_MODEL.trim().length > 0 ? env.JEV_MODEL.trim() : undefined;
   const model = modelOverride ?? (backend === 'typesafe' ? DEFAULT_TYPESAFE_MODEL : DEFAULT_GATEWAY_MODEL);
-  const hasKey = backend === 'typesafe' ? Boolean(env.TYPESAFE_API_KEY) : Boolean(env.AI_GATEWAY_API_KEY);
+  // Gateway auth: an explicit API key, or Vercel OIDC when running on Vercel
+  // (the gateway SDK picks up VERCEL_OIDC_TOKEN itself when apiKey is undefined).
+  const hasKey =
+    backend === 'typesafe'
+      ? Boolean(env.TYPESAFE_API_KEY)
+      : Boolean(env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN || env.VERCEL);
   const rawConcurrency = env.JEV_CONCURRENCY ? Number(env.JEV_CONCURRENCY) : NaN;
   const concurrency = Number.isFinite(rawConcurrency) && rawConcurrency > 0 ? Math.floor(rawConcurrency) : DEFAULT_CONCURRENCY;
   return { backend, model, hasKey, concurrency };
@@ -164,7 +169,7 @@ async function evaluateViaGateway(
   env: Record<string, string | undefined>,
   evaluateFn: typeof evaluate,
 ): Promise<JevWireResult> {
-  const gateway = createGateway({ apiKey: env.AI_GATEWAY_API_KEY });
+  const gateway = createGateway({ apiKey: env.AI_GATEWAY_API_KEY || undefined });
   const questions: Record<string, Experimental_EvaluationQuestion> = {};
   for (const [qid, q] of Object.entries(req.questions)) {
     questions[qid] = { type: 'choice', instructions: q.instructions, criteria: q.criteria };
