@@ -48,7 +48,7 @@ export function createApp(root: HTMLElement): void {
 
     let renderer: ThreeRenderer | null = null;
     try {
-      renderer = new ThreeRenderer(canvasHost, { worldSize: config.worldSize, signalRadius: config.bugSignalDistance });
+      renderer = new ThreeRenderer(canvasHost, { worldSize: config.worldSize });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       stage.appendChild(

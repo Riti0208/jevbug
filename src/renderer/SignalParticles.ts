@@ -86,7 +86,8 @@ export class SignalWavePool {
       out.push({
         ...w,
         radius: this.radius * easeOutCubic(t),
-        opacity: 1 - t,
+        // Heartbeat envelope: bright almost immediately, then a smooth fade.
+        opacity: (1 - t) * (1 - t),
       });
     }
     return out;
@@ -110,9 +111,10 @@ void main() {
 }
 `;
 
-// Base geometry is a unit quad (-1..1). We draw the ring procedurally in the fragment
-// shader so kind A/B can differ in line width and dash pattern, not only in color
-// (spec §44: "never rely on color alone").
+// Base geometry is a unit quad (-1..1). We draw a soft, blurred pulse procedurally in the
+// fragment shader: a gaussian glow that swells briefly around the emitting bug like a
+// heartbeat. Kind A is a single smooth glow; kind B carries a faint second, tighter core so
+// the two differ in shape as well as colour (spec §44: "never rely on color alone").
 const FRAGMENT_SHADER = /* glsl */ `
 precision mediump float;
 uniform vec3 uColorA;
@@ -124,18 +126,15 @@ varying vec2 vLocalPos;
 void main() {
   float r = length(vLocalPos);
   if (r > 1.0) discard;
-  float angle = atan(vLocalPos.y, vLocalPos.x);
 
-  // Signal A: a thin ring near the outer edge.
-  // Signal B: a thicker ring, additionally broken into dashes.
-  float bandA = smoothstep(0.93, 0.965, r) * (1.0 - smoothstep(0.985, 1.0, r));
-  float bandB = smoothstep(0.88, 0.92, r) * (1.0 - smoothstep(0.985, 1.0, r));
-  float dash = step(0.0, sin(angle * 14.0));
-  bandB *= mix(1.0, dash, 0.75);
+  // Soft gaussian glow, fully transparent at the quad edge.
+  float glow = exp(-r * r * 4.5) * (1.0 - smoothstep(0.85, 1.0, r));
+  // Kind B: add a tighter, brighter core inside the glow.
+  float core = exp(-r * r * 18.0) * 0.6;
+  float shape = mix(glow, glow * 0.8 + core, vKind);
 
-  float band = mix(bandA, bandB, vKind);
   vec3 color = mix(uColorA, uColorB, vKind);
-  gl_FragColor = vec4(color, band * vOpacity * 0.75);
+  gl_FragColor = vec4(color, shape * vOpacity * 0.5);
 }
 `;
 

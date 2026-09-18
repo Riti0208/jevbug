@@ -17,8 +17,9 @@ export interface ThreeRendererOptions {
   maxPixelRatio?: number;
 }
 
-const DEFAULT_SIGNAL_RADIUS = 8;
-const DEFAULT_SIGNAL_LIFETIME_MS = 700;
+/** Visual pulse radius in world units — a small glow around the emitter, not the reception range. */
+const DEFAULT_SIGNAL_RADIUS = 2.2;
+const DEFAULT_SIGNAL_LIFETIME_MS = 550;
 const DEFAULT_MAX_PIXEL_RATIO = 2;
 
 const SELECTION_RING_VERTEX_SHADER = /* glsl */ `

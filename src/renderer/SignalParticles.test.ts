@@ -36,7 +36,7 @@ describe('SignalWavePool', () => {
     pool.ingest([sig()], 5000); // same id+tick, arrives "late" (e.g. redundant snapshot)
     expect(pool.size).toBe(1);
     const active = pool.getActive(1000 + 350); // 350ms after the true start
-    expect(active[0].opacity).toBeCloseTo(0.5, 1);
+    expect(active[0].opacity).toBeCloseTo(0.25, 1);
   });
 
   it('treats different ticks from the same bug as distinct waves', () => {
@@ -59,12 +59,12 @@ describe('SignalWavePool', () => {
     expect(atEnd.radius).toBeLessThanOrEqual(10);
   });
 
-  it('opacity fades linearly from 1 to 0 over the lifetime', () => {
+  it('opacity fades quadratically (heartbeat) from 1 to 0 over the lifetime', () => {
     const pool = new SignalWavePool(1000, 10);
     pool.ingest([sig()], 0);
     expect(pool.getActive(0)[0].opacity).toBeCloseTo(1);
-    expect(pool.getActive(250)[0].opacity).toBeCloseTo(0.75);
-    expect(pool.getActive(750)[0].opacity).toBeCloseTo(0.25);
+    expect(pool.getActive(250)[0].opacity).toBeCloseTo(0.5625);
+    expect(pool.getActive(750)[0].opacity).toBeCloseTo(0.0625);
   });
 
   it('drops a wave from getActive once its lifetime has fully elapsed', () => {
@@ -109,7 +109,7 @@ describe('SignalWavePool', () => {
     pool.setLifetimeMs(2000);
     pool.setRadius(20);
     const active = pool.getActive(1000); // was 100% through old lifetime, now 50% through new one
-    expect(active[0].opacity).toBeCloseTo(0.5);
+    expect(active[0].opacity).toBeCloseTo(0.25);
     // easeOutCubic(0.5) = 0.875, radius base is now 20
     expect(active[0].radius).toBeCloseTo(20 * 0.875, 5);
   });
