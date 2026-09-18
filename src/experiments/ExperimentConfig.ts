@@ -122,6 +122,3 @@ export interface RunProgress {
   population: number;
   ticksPerSecond: number;
 }
-
-/** Re-exported here for convenience of callers that only import ExperimentConfig.ts. */
-export type { Signal };
