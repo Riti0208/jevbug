@@ -390,6 +390,8 @@ export class JevDecisionProvider implements DecisionProvider {
         first = false;
       }
       this.stats.answered += g.indices.length;
+      // Duplicates within this same batch shared one live Jev call — count them as cache hits too.
+      if (g.indices.length > 1) this.stats.cacheHits += g.indices.length - 1;
     }
   }
 
