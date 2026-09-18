@@ -51,6 +51,6 @@ export function emitSignal(
   bug.lastSignalEmitted = actual;
   if (actual !== 'NONE') {
     bug.energy += config.energySignal;
-    emitted.push({ bugId: bug.id, position: bug.position, signal: actual });
+    emitted.push({ bugId: bug.id, position: { x: bug.position.x, y: bug.position.y }, signal: actual });
   }
 }
