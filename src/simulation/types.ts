@@ -259,7 +259,7 @@ export interface TickRecord {
   population: number;
   predatorCount: number;
   foodCount: number;
-  /** Signals actually emitted this tick (raw, before NO_COMMUNICATION suppression). */
+  /** Signals actually emitted this tick after mode processing (all 'NONE' in NO_COMMUNICATION). */
   signalCounts: Record<Signal, number>;
   averageEnergy: number;
   averageAge: number;

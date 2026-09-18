@@ -97,7 +97,7 @@ export interface SimulationConfig {
   // ---- Decision ----
   /** Max concurrent provider requests (Jev batching). */
   decisionConcurrency: number;
-  /** Bugs per provider batch call. */
+  /** Max bugs per provider batch call (one HTTP round trip to /api/jev carries up to this many bugs). */
   decisionBatchSize: number;
   /** How many recent memory entries are exposed to the provider. */
   recentMemoryWindow: number;
@@ -166,7 +166,7 @@ export const DEFAULT_CONFIG: SimulationConfig = {
   maxPopulation: 400,
 
   decisionConcurrency: 8,
-  decisionBatchSize: 1,
+  decisionBatchSize: 32,
   recentMemoryWindow: 10,
 
   predatorRespawn: false,
