@@ -142,12 +142,12 @@ export interface ComparisonCondition {
 
 /**
  * The standard 4-condition comparison grid (spec §49):
- *   A. COMMUNICATION      + WITH_MEMORY  — the full experimental condition.
- *   B. NO_COMMUNICATION   + WITH_MEMORY  — communication ablated.
- *   C. SHUFFLED_COMMUNICATION + WITH_MEMORY — communication present but decoupled
- *      from the sender (receivers can't learn anything from it).
- *   D. COMMUNICATION      + NO_MEMORY    — memory ablated, to separate the
- *      contribution of within-lifetime learning from communication itself.
+ *   A. COMMUNICATION          + WITH_MEMORY — the full experimental condition.
+ *   B. COMMUNICATION          + NO_MEMORY   — naive agent: separates provider
+ *      prior knowledge from individually learned experience.
+ *   C. NO_COMMUNICATION       + WITH_MEMORY — communication ablated (baseline).
+ *   D. SHUFFLED_COMMUNICATION + WITH_MEMORY — signals present but their identity
+ *      is randomised on reception (signal activity without information).
  */
 export const DEFAULT_COMPARISON_CONDITIONS: ComparisonCondition[] = [
   { label: 'A', mode: 'COMMUNICATION', memoryMode: 'WITH_MEMORY' },

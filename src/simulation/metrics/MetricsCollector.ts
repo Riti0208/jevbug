@@ -53,8 +53,7 @@ export function classifyHeard(signalsHeard: readonly ('A' | 'B')[]): HeardCatego
   }
   if (hasA && hasB) return 'MIXED';
   if (hasA) return 'A';
-  if (hasB) return 'B';
-  return 'MIXED';
+  return 'B';
 }
 
 const ZERO_TRAITS: BugTraits = {

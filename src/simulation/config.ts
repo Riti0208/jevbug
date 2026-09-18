@@ -32,8 +32,10 @@ export interface SimulationConfig {
   foodValue: number;
 
   // ---- Perception ----
+  /** How far a bug can see food and predators. */
   bugViewDistance: number;
   bugSignalDistance: number;
+  /** How far a predator can see bugs (predator-side only, spec §17). */
   predatorViewDistance: number;
   /** Half-angle (radians) of the "front" cone; the rest is left/right by sign of the angle. */
   frontConeHalfAngle: number;

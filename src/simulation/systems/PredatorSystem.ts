@@ -20,6 +20,7 @@ export function updatePredators(
   rng: SeededRandom,
 ): PredatorTickResult {
   const attackedBugIds = new Set<string>();
+  const attackedThisTick = new Set<string>();
   const aliveBugs = bugs.filter((b) => b.alive);
   const bugIndex = new SpatialIndex(worldSize, Math.max(config.predatorViewDistance, 1), aliveBugs, (b) => b.position);
 
@@ -49,6 +50,7 @@ export function updatePredators(
       if (nearestDist <= config.predatorAttackRange && predator.attackCooldown === 0) {
         attackedBugIds.add(nearest.id);
         predator.attackCooldown = config.predatorAttackCooldown;
+        attackedThisTick.add(predator.id);
       }
     } else {
       predator.targetBugId = null;
@@ -62,9 +64,10 @@ export function updatePredators(
     }
   }
 
-  // Decrement cooldowns for all predators, uniformly, after this tick's attacks.
+  // Decrement cooldowns after this tick's attacks, skipping predators that just
+  // attacked so a cooldown of N really blocks N ticks.
   for (const predator of predators) {
-    if (predator.attackCooldown > 0) predator.attackCooldown -= 1;
+    if (predator.attackCooldown > 0 && !attackedThisTick.has(predator.id)) predator.attackCooldown -= 1;
   }
 
   return { attackedBugIds };
