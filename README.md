@@ -37,7 +37,9 @@ npm run dev                  # http://localhost:5173  (the Vite plugin serves /a
 
 Press **Start** in the browser. The simulation runs until you press **Stop** or close the tab.
 All initial parameters (bug count, predator count, food, mode, provider, seed, ...) can be
-set on the start screen.
+set on the start screen. The UI works on desktop and on phones: drag/wheel or touch/pinch to
+pan and zoom, tap a bug to open the inspector. On narrow screens the panels live in a
+bottom sheet with Controls / Metrics / Inspector tabs.
 
 ## Headless experiments
 

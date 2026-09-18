@@ -252,15 +252,13 @@ anywhere in the payload — plus checks for `null` signal criteria, absence of
 
 ## Uncertain / not independently verified
 
-- **Vercel OIDC auth for the Gateway.** The AI SDK docs say
-  `createGateway({ apiKey: undefined })` can authenticate via Vercel OIDC
-  when running on Vercel with no explicit key. This implementation does
-  **not** rely on that: if `AI_GATEWAY_API_KEY` is unset, `evaluateBatch`
-  short-circuits with a `Jev is not configured` error for every request
-  before ever calling `createGateway`/`evaluate`, per this integration's
-  explicit contract. If you want to rely on OIDC instead of an explicit key,
-  that check needs to be relaxed for the `gateway` backend specifically —
-  flagging this so it's a deliberate choice, not an oversight.
+- **Vercel OIDC auth for the Gateway.** When `AI_GATEWAY_API_KEY` is unset
+  but the function runs on Vercel (`VERCEL=1` / `VERCEL_OIDC_TOKEN` present),
+  `evaluateBatch` still calls `createGateway({ apiKey: undefined })` and lets
+  the AI SDK authenticate through Vercel OIDC. This path was not exercised
+  against a live deployment; if it fails you will see the gateway's own
+  authentication error in each result and in the UI provider status line.
+  Setting `AI_GATEWAY_API_KEY` explicitly is the verified path.
 - **TypeSafe direct API (`JEV_BACKEND=typesafe`) response shape.** The exact
   field names of `api.typesafe.ai/v1/systemone`'s response (beyond
   `answers[].{type, choice, confidence, probabilities}` and top-level
