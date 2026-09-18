@@ -128,14 +128,14 @@ void main() {
 
   // Signal A: a thin ring near the outer edge.
   // Signal B: a thicker ring, additionally broken into dashes.
-  float bandA = smoothstep(0.86, 0.94, r) * (1.0 - smoothstep(0.98, 1.0, r));
-  float bandB = smoothstep(0.72, 0.80, r) * (1.0 - smoothstep(0.98, 1.0, r));
+  float bandA = smoothstep(0.93, 0.965, r) * (1.0 - smoothstep(0.985, 1.0, r));
+  float bandB = smoothstep(0.88, 0.92, r) * (1.0 - smoothstep(0.985, 1.0, r));
   float dash = step(0.0, sin(angle * 14.0));
   bandB *= mix(1.0, dash, 0.75);
 
   float band = mix(bandA, bandB, vKind);
   vec3 color = mix(uColorA, uColorB, vKind);
-  gl_FragColor = vec4(color, band * vOpacity);
+  gl_FragColor = vec4(color, band * vOpacity * 0.75);
 }
 `;
 

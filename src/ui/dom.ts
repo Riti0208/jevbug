@@ -26,11 +26,11 @@ export function el<K extends keyof HTMLElementTagNameMap>(
     } else if (key === 'style') {
       Object.assign(node.style, value as Partial<CSSStyleDeclaration>);
     } else if (key === 'onClick') {
-      node.addEventListener('click', value as (e: MouseEvent) => void);
+      node.addEventListener('click', value as EventListener);
     } else if (key === 'onInput') {
-      node.addEventListener('input', value as (e: Event) => void);
+      node.addEventListener('input', value as EventListener);
     } else if (key === 'onChange') {
-      node.addEventListener('change', value as (e: Event) => void);
+      node.addEventListener('change', value as EventListener);
     } else if (key.startsWith('data-')) {
       node.setAttribute(key, String(value));
     } else if (key in node) {

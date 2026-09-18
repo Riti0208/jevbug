@@ -86,6 +86,9 @@ export class SimulationController {
   private status: ControllerStatus = 'idle';
   private speed: Speed = 1;
   private tick = 0;
+  /** Count of ticks actually executed this run (independent of the simulation's own
+   * 0-based `tick` numbering) — used for ExperimentExport's ticksRun/ticksRequested. */
+  private ticksRunCount = 0;
   private selectedBugId: string | null = null;
   private lastError: string | null = null;
 
@@ -127,6 +130,7 @@ export class SimulationController {
     this.startedAt = this.now();
 
     this.tick = 0;
+    this.ticksRunCount = 0;
     this.speed = 1;
     this.lastError = null;
     this.selectedBugId = null;
@@ -241,8 +245,8 @@ export class SimulationController {
       mode: this._config.mode,
       memoryMode: this._config.memoryMode,
       provider: this._provider?.name ?? this._config.decisionProvider,
-      ticksRequested: this.tick,
-      ticksRun: this.tick,
+      ticksRequested: this.ticksRunCount,
+      ticksRun: this.ticksRunCount,
       extinct: population === 0,
       durationMs: this.now() - this.startedAt,
       config: this._config,
@@ -310,14 +314,14 @@ export class SimulationController {
     if (this.stepInFlight) return;
     if (!this._simulation || !this._metrics || !this._logger) return;
     this.stepInFlight = true;
-    const t0 = this.now();
     try {
       const record = await this._simulation.step();
       if (token !== this.runToken) return; // stopped while awaiting — discard
       this._metrics.record(record);
       this._logger.record(record, this._metrics);
       this.tick = record.tick;
-      this.updateTicksPerSecond(t0);
+      this.ticksRunCount += 1;
+      this.updateTicksPerSecond();
       this.emitTick(record);
       this.emitState();
     } catch (err) {
@@ -331,7 +335,14 @@ export class SimulationController {
     }
   }
 
-  private updateTicksPerSecond(tickStartedAt: number): void {
+  /**
+   * EMA of ticks/sec over roughly the last second, based on wall-clock spacing
+   * between consecutive completed ticks. The very first tick has no prior sample
+   * to compare against, so it only seeds `lastTickAt`; `ticksPerSecond` stays 0
+   * until a second tick lands (deliberately — a single step's duration is not a
+   * reliable rate estimate, especially at MAX speed where steps can be sub-ms).
+   */
+  private updateTicksPerSecond(): void {
     const now = this.now();
     if (this.lastTickAt != null) {
       const dt = now - this.lastTickAt;
@@ -340,10 +351,6 @@ export class SimulationController {
         const alpha = Math.min(1, dt / 1000); // ~1s time constant EMA
         this.ticksPerSecondEma = this.ticksPerSecondEma === 0 ? instant : this.ticksPerSecondEma + alpha * (instant - this.ticksPerSecondEma);
       }
-    } else {
-      // First tick: seed with an instant estimate from step duration alone.
-      const stepDt = Math.max(1, now - tickStartedAt);
-      this.ticksPerSecondEma = 1000 / stepDt;
     }
     this.lastTickAt = now;
   }

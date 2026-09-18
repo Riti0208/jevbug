@@ -47,9 +47,11 @@ varying float vSelected;
 void main() {
   vec2 uv = gl_PointCoord - vec2(0.5);
   float d = length(uv) * 2.0;
-  float alpha = smoothstep(1.0, 0.0, d);
-  alpha = pow(alpha, 1.6);
-  vec3 col = vColor + vSelected * 0.15; // a faint extra glow on the selected bug itself
+  // Soft glow plus a bright core so a bug stays visible when it is only a few pixels wide.
+  float glow = pow(smoothstep(1.0, 0.0, d), 1.6);
+  float core = 1.0 - smoothstep(0.0, 0.35, d);
+  float alpha = min(1.0, glow * 0.85 + core);
+  vec3 col = vColor * (0.8 + 0.6 * core) + vSelected * 0.15; // a faint extra glow on the selected bug itself
   gl_FragColor = vec4(col, alpha);
 }
 `;

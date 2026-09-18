@@ -41,8 +41,8 @@ export const SIGNAL_COLORS: Readonly<Record<'A' | 'B', number>> = {
 
 /** Base point sizes in world units (before the camera's pixels-per-world-unit scale). */
 export const SIZES = {
-  bug: 0.35,
-  food: 0.15,
-  predator: 1.2,
-  selectionRing: 0.9,
+  bug: 0.9,
+  food: 0.3,
+  predator: 1.8,
+  selectionRing: 1.4,
 } as const;

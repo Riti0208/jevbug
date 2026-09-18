@@ -78,14 +78,15 @@ describe('SimulationController lifecycle', () => {
     controller.start(tinyConfig());
     await flush();
 
-    expect(controller.getState().tick).toBe(1);
-    expect(tickEvents).toEqual([1]);
+    // Simulation ticks are 0-indexed (Simulation.step() returns tick 0 first).
+    expect(controller.getState().tick).toBe(0);
+    expect(tickEvents).toEqual([0]);
     expect(h.pendingCount()).toBe(1); // next loop iteration scheduled
 
     h.runNextScheduled();
     await flush();
-    expect(controller.getState().tick).toBe(2);
-    expect(tickEvents).toEqual([1, 2]);
+    expect(controller.getState().tick).toBe(1);
+    expect(tickEvents).toEqual([0, 1]);
   });
 
   it('pause() stops scheduling further ticks; resume() restarts the loop', async () => {
@@ -93,7 +94,7 @@ describe('SimulationController lifecycle', () => {
     const controller = new SimulationController(h.deps);
     controller.start(tinyConfig());
     await flush();
-    expect(controller.getState().tick).toBe(1);
+    expect(controller.getState().tick).toBe(0);
     expect(h.pendingCount()).toBe(1);
 
     controller.pause();
@@ -105,12 +106,12 @@ describe('SimulationController lifecycle', () => {
     // running the (now cancelled) scheduled callback must not advance the tick
     h.runNextScheduled();
     await flush();
-    expect(controller.getState().tick).toBe(1);
+    expect(controller.getState().tick).toBe(0);
 
     controller.resume();
     expect(controller.getState().status).toBe('running');
     await flush();
-    expect(controller.getState().tick).toBe(2);
+    expect(controller.getState().tick).toBe(1);
   });
 
   it('step() advances exactly one tick while paused, and is a no-op otherwise', async () => {
@@ -230,7 +231,8 @@ describe('SimulationController ticksPerSecond', () => {
     const controller = new SimulationController(h.deps);
     controller.start(tinyConfig());
     await flush();
-    expect(controller.getState().ticksPerSecond).toBeGreaterThan(0);
+    // No rate estimate yet after only one tick — the first tick just seeds the clock.
+    expect(controller.getState().ticksPerSecond).toBe(0);
 
     for (let i = 0; i < 5; i++) {
       h.advance(200); // simulate ~5 ticks/sec real spacing
@@ -331,7 +333,7 @@ describe('SimulationController error handling', () => {
     await flush();
     // Simulation.step() itself swallows provider errors (falls back to uniform decisions
     // internally), so the controller should NOT see an error and ticking should proceed.
-    expect(controller.getState().tick).toBe(1);
+    expect(controller.getState().tick).toBe(0);
     expect(calls).toBeGreaterThan(0);
     expect(controller.getState().status).toBe('running');
   });
