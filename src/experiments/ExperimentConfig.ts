@@ -4,7 +4,7 @@
  * export.ts.
  */
 import type { SimulationConfig } from '../simulation/config';
-import type { DeathRecord, ExperimentMode, MemoryMode, Signal } from '../simulation/types';
+import type { DeathRecord, ExperimentMode, MemoryMode } from '../simulation/types';
 import type {
   CommunicationMetrics,
   GlobalMetrics,

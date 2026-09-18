@@ -1,52 +1,17 @@
 /**
  * ExperimentLogger — collects the per-run data an ExperimentExport needs:
- * a periodic summary row (see ExperimentRow in src/experiments/ExperimentConfig.ts),
- * every DeathRecord (bounded), and optionally a bounded ring of raw
- * BugObservations (off by default — this can get large fast).
+ * a periodic summary row (ExperimentRow), every DeathRecord (bounded), and
+ * optionally a bounded ring of raw BugObservations (off by default — this can
+ * get large fast).
  *
- * This file only depends on `../types` and MetricsCollector; it does not know
- * about experiment configuration. src/experiments/ExperimentRunner.ts feeds it
- * a TickRecord + the MetricsCollector every tick, then calls `toExport(meta)`
- * once the run is done to assemble the full ExperimentExport.
+ * This file only takes `type` imports from src/experiments/ExperimentConfig.ts
+ * (erased at compile time, so there is no runtime dependency and no cycle) —
+ * it is the single source of truth for the ExperimentRow / ExperimentExport
+ * shapes so metrics and export stay in sync.
  */
-import type { BugObservation, DeathRecord, ExperimentMode, MemoryMode, TickRecord } from '../types';
+import type { DeathRecord, TickRecord, BugObservation } from '../types';
 import type { MetricsCollector } from './MetricsCollector';
-
-// Kept structurally identical to (a subset of) ExperimentExport / ExperimentRow
-// from src/experiments/ExperimentConfig.ts, but this file does not import that
-// module (metrics/ has no dependency on experiments/) — ExperimentRunner is
-// responsible for making sure the shapes line up, which the integration test
-// checks.
-export interface ExperimentRowDraft {
-  tick: number;
-  population: number;
-  births: number;
-  deathsTotal: number;
-  deathsPredator: number;
-  deathsStarvation: number;
-  deathsOldAge: number;
-  maxGeneration: number;
-  averageGeneration: number;
-  averageEnergy: number;
-  averageAge: number;
-  averageLifespan: number;
-  signalCountNone: number;
-  signalCountA: number;
-  signalCountB: number;
-  signalRate: number;
-  MI_signal_predator: number;
-  MI_signal_food: number;
-  MI_signal_action: number;
-  MI_signal_flee: number;
-  potentialCommunication: boolean;
-}
-
-export type ExperimentRow = ExperimentRowDraft & {
-  experimentId: string;
-  seed: number;
-  mode: ExperimentMode;
-  memoryMode: MemoryMode;
-};
+import type { ExperimentExport, ExperimentRow } from '../../experiments/ExperimentConfig';
 
 export interface ExperimentLoggerOptions {
   /** Log a summary row every N ticks. Defaults to 10. */
@@ -59,38 +24,25 @@ export interface ExperimentLoggerOptions {
   maxObservationEntries?: number;
 }
 
-export interface ExperimentLoggerMeta {
-  experimentId: string;
-  seed: number;
-  mode: ExperimentMode;
-  memoryMode: MemoryMode;
-  provider: string;
-  ticksRequested: number;
-  ticksRun: number;
-  extinct: boolean;
-  durationMs: number;
-  config: unknown;
-  /** Metrics collector to pull final/communication/timeline snapshots from. */
+/** Fields the logger fills in about a completed run when asked to export it. */
+export type ExperimentLoggerMeta = Pick<
+  ExperimentExport,
+  | 'experimentId'
+  | 'seed'
+  | 'mode'
+  | 'memoryMode'
+  | 'provider'
+  | 'ticksRequested'
+  | 'ticksRun'
+  | 'extinct'
+  | 'durationMs'
+  | 'config'
+> & {
+  /** Metrics collector to pull the final/communication/timeline snapshots from. */
   metrics: MetricsCollector;
-}
+};
 
-export interface ExperimentExportLike {
-  experimentId: string;
-  seed: number;
-  mode: ExperimentMode;
-  memoryMode: MemoryMode;
-  provider: string;
-  ticksRequested: number;
-  ticksRun: number;
-  extinct: boolean;
-  durationMs: number;
-  config: unknown;
-  final: ReturnType<MetricsCollector['getGlobal']>;
-  communication: ReturnType<MetricsCollector['getCommunication']>;
-  timeline: ReturnType<MetricsCollector['getTimeline']>;
-  rows: ExperimentRow[];
-  deaths: DeathRecord[];
-}
+type ExperimentRowDraft = Omit<ExperimentRow, 'experimentId' | 'seed' | 'mode' | 'memoryMode'>;
 
 export class ExperimentLogger {
   private readonly logEvery: number;
@@ -165,7 +117,7 @@ export class ExperimentLogger {
     return this.observations;
   }
 
-  toExport(meta: ExperimentLoggerMeta): ExperimentExportLike {
+  toExport(meta: ExperimentLoggerMeta): ExperimentExport {
     const rows: ExperimentRow[] = this.rowDrafts.map((draft) => ({
       experimentId: meta.experimentId,
       seed: meta.seed,
